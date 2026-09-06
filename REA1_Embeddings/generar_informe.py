@@ -3,11 +3,12 @@ import json
 from pathlib import Path
 
 from docx import Document
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.shared import Cm, Inches, Pt
 
 BASE = Path(__file__).parent
-FIG = BASE / "figuras"
+FIG = BASE / "figuras_colab"
 RES = json.loads((BASE / "resultados.json").read_text(encoding="utf-8"))
 REPO = "https://github.com/SonicWD/PROCESAMIENTO-DE-LENGUAJE-NATURAL"
 COLAB = (
@@ -54,7 +55,33 @@ def add_heading(text, level=1):
     return p
 
 
-def add_figura(path, caption, width_in=5.8):
+def add_tabla(headers, rows):
+    table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    table.style = "Table Grid"
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for i, h in enumerate(headers):
+        cell = table.rows[0].cells[i]
+        cell.text = h
+        for p in cell.paragraphs:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            for r in p.runs:
+                r.bold = True
+                r.font.size = Pt(10)
+                r.font.name = "Times New Roman"
+    for ri, row in enumerate(rows):
+        for ci, val in enumerate(row):
+            cell = table.rows[ri + 1].cells[ci]
+            cell.text = str(val)
+            for p in cell.paragraphs:
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for r in p.runs:
+                    r.font.size = Pt(10)
+                    r.font.name = "Times New Roman"
+    cap_space = doc.add_paragraph()
+    cap_space.paragraph_format.space_after = Pt(10)
+
+
+def add_figura(path, caption, width_in=5.6):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run().add_picture(str(path), width=Inches(width_in))
@@ -108,9 +135,9 @@ add_p("")
 add_heading("Enlaces de evidencia")
 add_p(
     f"Repositorio GitHub (público): {REPO}. "
-    f"Notebook del laboratorio (Colab): {COLAB}. "
-    "El PDF se basa en la ejecución de ese cuaderno y del script laboratorio.py, "
-    "con las mismas ocho oraciones, semilla 42 y figuras reproducibles."
+    f"Notebook del laboratorio, ya ejecutado en Google Colab con salidas y figuras: {COLAB}. "
+    "Las imágenes de este informe se extraen de esas celdas (mapas de calor y PCA). "
+    "La semilla es 42; el corpus son las ocho oraciones del cuaderno."
 )
 
 add_heading("1. Introducción y objetivo")
@@ -165,70 +192,104 @@ add_p(
     "mismo SVD de LSA, y se ordenó el corpus por coseno. Semilla 42 en PCA y SVD."
 )
 
-add_heading("4. Resultados")
+add_heading("4. Resultados (salida de Colab)")
 add_p(
-    "La Tabla implícita en las métricas muestra el salto cualitativo al densificar. "
-    f"One-hot: intra {RES['onehot_intra']} vs inter {RES['onehot_inter']}. "
-    f"TF-IDF: intra {RES['tfidf_intra']} vs inter {RES['tfidf_inter']}. "
-    f"LSA (3D): intra {RES['lsa_intra']} vs inter {RES['lsa_inter']}. "
-    f"PPMI+SVD (3D): intra {RES['ppmi_intra']} vs inter {RES['ppmi_inter']}. "
-    "En las representaciones dispersas ya hay señal —los temas no son ruido—, "
-    "pero el margen es moderado porque dos avisos de vivienda no copian las "
-    f"mismas palabras (D4 vs D5 en TF-IDF = {RES['sim_d4_d5_tfidf']}; D4 vs D7 "
-    f"deporte = {RES['sim_d4_d7_tfidf']}). Al bajar a tres dimensiones, el "
-    "coseno intra-tema se acerca a 1 y el inter-tema permanece cerca de 0. "
-    "LSA no “inventa” temas: comprime las correlaciones que ya estaban en TF-IDF "
-    f"y las vuelve geometría. La varianza por componente fue {RES['lsa_varianza']} "
-    "(la suma es parcial: tres ejes no reconstruyen las 57 dimensiones, y no "
-    "hace falta para separar tres tópicos)."
+    "La Tabla 1 copia la celda 7 del notebook. Al pasar de 57 dimensiones dispersas "
+    "a 3 densas, el coseno intra-tema pasa de 0.24–0.35 a ≈ 0.99, y el inter-tema "
+    "sigue cerca de 0. En TF-IDF, D4 y D5 (vivienda) se parecen 0.40 y D4 vs D7 "
+    "(deporte) queda en 0.00: sin palabras compartidas no hay señal. LSA no inventa "
+    "temas; comprime las correlaciones de TF-IDF. La varianza de los tres "
+    "componentes LSA es 0.1317, 0.1303 y 0.1630 (suma 0.425): basta para separar "
+    "tres tópicos, no para reconstruir el vocabulario completo."
 )
-add_figura(
-    FIG / "fig1_sim_onehot.png",
-    "Figura 1. Similitud coseno con one-hot. Elaboración propia.",
-)
-add_figura(
-    FIG / "fig2_sim_tfidf.png",
-    "Figura 2. Similitud coseno con TF-IDF. Elaboración propia.",
-)
-add_figura(
-    FIG / "fig3_sim_lsa.png",
-    "Figura 3. Similitud coseno con embeddings LSA (3 dimensiones). Elaboración propia.",
+add_tabla(
+    ["Representación", "Dim.", "Coseno intra-tema", "Coseno inter-tema"],
+    [
+        ["one-hot", "57", "0.3460", "0.0053"],
+        ["TF-IDF", "57", "0.2363", "0.0045"],
+        ["LSA", "3", "0.9879", "0.0155"],
+        ["PPMI+SVD", "3", "0.9872", "0.0351"],
+    ],
 )
 add_p(
-    "Las Figuras 4 y 5 proyectan los embeddings a 2D con PCA. Los tres colores "
-    "(NLP, vivienda, deporte) forman nubes separadas. No es un t-SNE de un "
-    "modelo industrial; es la evidencia, en un corpus pequeño y controlado, de "
-    "que el mapeo texto → vector organizó el espacio por tema. PPMI+SVD, que "
-    "parte de contexto local (ventana 2) y no de frecuencias documento-término, "
-    "llega a una separación comparable: el promedio de palabras hereda la "
-    "estructura de coocurrencia."
+    "Tabla 1. Separación por tema medida en el notebook ejecutado en Colab. "
+    "Elaboración a partir de la celda 7.",
+    indent=False,
+    align="center",
 )
 add_figura(
-    FIG / "fig4_pca_lsa.png",
-    "Figura 4. PCA de documentos sobre LSA. Elaboración propia.",
-)
-add_figura(
-    FIG / "fig5_pca_ppmi.png",
-    "Figura 5. PCA de documentos sobre la media PPMI+SVD. Elaboración propia.",
+    FIG / "colab_fig1.png",
+    "Figura 1. Similitud coseno TF-IDF. Salida de Google Colab (celda 8).",
 )
 add_p(
-    "La consulta de vivienda confirma el uso práctico. El ranking LSA colocó "
-    + ", ".join(
-        f"{h['id']} ({h['tema']}, coseno {h['sim']})"
-        for h in RES["ranking_lsa"][:3]
-    )
-    + " en los tres primeros puestos. El resto del corpus queda en torno a cero. "
-    "D5 y D4 empatan casi en 1 porque la consulta comparte apartamento, tres, "
-    "habitaciones, parqueadero/garaje-equivalente vía el espacio latente y Bogotá. "
-    "D6 no habla de parqueadero y aun así entra al bloque vivienda (0.97): eso "
-    "es el insight de un embedding denso frente a un filtro booleano."
+    "En la Figura 1 se ven tres bloques: D1–D3 (NLP, cosenos 0.17–0.19), "
+    "D4–D6 (vivienda; el par D4–D5 llega a 0.40) y D7–D8 (deporte, 0.30). "
+    "Entre NLP y el resto el mapa es amarillo (0.00). Es exactamente el límite "
+    "de una representación léxica: si no hay tokens en común, el ángulo es 90°."
+)
+add_figura(
+    FIG / "colab_fig2.png",
+    "Figura 2. Similitud coseno LSA (3 dimensiones). Salida de Google Colab (celda 8).",
+)
+add_p(
+    "La Figura 2 es el mismo corpus en el espacio denso. Los bloques intra-tema "
+    "pasan a azul oscuro (≈ 1.00) y el cruce entre temas permanece claro. D1, D2 y "
+    "D3 quedan casi indistinguibles entre sí; D4, D5 y D6 forman el otro cubo; "
+    "D7 y D8 el tercero. Ahí se ve el oficio del embedding: documentos que en "
+    "TF-IDF apenas se rozaban ahora comparten un factor latente de tema."
+)
+add_figura(
+    FIG / "colab_fig3.png",
+    "Figura 3. PCA de documentos sobre embeddings LSA. Salida de Google Colab (celda 9).",
+)
+add_p(
+    "La Figura 3 proyecta esos vectores a 2D. Azul (NLP: D1–D3) se agrupa abajo "
+    "a la izquierda; rojo (vivienda: D4 y D5 casi superpuestos, D6 un poco "
+    "desplazado) a la derecha; verde (deporte: D7–D8) arriba. El eje X separa "
+    "vivienda del resto; el eje Y separa deporte. No es un t-SNE industrial: "
+    "ocho puntos, tres temas, separación legible."
+)
+add_figura(
+    FIG / "colab_fig4.png",
+    "Figura 4. PCA sobre la media PPMI+SVD. Salida de Google Colab (celda 9).",
+)
+add_p(
+    "La Figura 4, construida con coocurrencia local y no con TF-IDF, reproduce "
+    "las mismas tres nubes. El embedding de documento como promedio de palabras "
+    "hereda la estructura de contexto: “apartamento” y “habitaciones” empujan "
+    "hacia vivienda; “fútbol” y “partido” hacia deporte."
+)
+add_p(
+    "La Tabla 2 es el ranking de la consulta «Necesito un apartamento de tres "
+    "habitaciones con parqueadero en Bogotá», proyectada con el mismo TF-IDF+SVD "
+    "(celda 10). Los tres avisos de vivienda salen primero (0.9998, 0.9997 y "
+    "0.9656). El resto del corpus queda en torno a cero. D6 no menciona "
+    "parqueadero y aun así entra al bloque: eso no lo haría un filtro booleano."
+)
+add_tabla(
+    ["Puesto", "Id", "Tema", "Coseno LSA"],
+    [
+        ["1", "D5", "Vivienda", "0.9998"],
+        ["2", "D4", "Vivienda", "0.9997"],
+        ["3", "D6", "Vivienda", "0.9656"],
+        ["4", "D7", "Deporte", "0.0219"],
+        ["5", "D3", "NLP", "0.0000"],
+        ["6", "D2", "NLP", "0.0000"],
+        ["7", "D1", "NLP", "0.0000"],
+        ["8", "D8", "Deporte", "−0.0553"],
+    ],
+)
+add_p(
+    "Tabla 2. Recuperación semántica de la consulta de vivienda. Salida de Colab, celda 10.",
+    indent=False,
+    align="center",
 )
 
 add_heading("5. Análisis y límites")
 add_p(
     "Tres lecturas. Una, el cuello de botella del NLP clásico no es “pasar "
     "texto a números”, sino elegir una geometría que no colapse la semántica. "
-    "Two oraciones sin solapamiento léxico son invisibles para TF-IDF y visibles "
+    "Dos oraciones sin solapamiento léxico son invisibles para TF-IDF y visibles "
     "para LSA si pertenecen al mismo factor. Dos, la dimensionalidad no es un "
     "lujo: 57 ejes one-hot vs 3 densos. En un corpus real el vocabulario llega "
     "a decenas de miles; los embeddings (Word2Vec 300-D, BERT 768-D) son la "
