@@ -1,0 +1,68 @@
+{
+  "n_docs": 8,
+  "vocab_size": 57,
+  "dim_onehot": 57,
+  "dim_tfidf": 57,
+  "dim_lsa": 3,
+  "dim_ppmi": 3,
+  "onehot_intra": 0.346,
+  "onehot_inter": 0.0053,
+  "tfidf_intra": 0.2363,
+  "tfidf_inter": 0.0045,
+  "lsa_intra": 0.9879,
+  "lsa_inter": 0.0155,
+  "ppmi_intra": 0.9872,
+  "ppmi_inter": 0.0351,
+  "lsa_varianza": [
+    0.1317,
+    0.1303,
+    0.163
+  ],
+  "consulta": "Necesito un apartamento de tres habitaciones con parqueadero en Bogotá",
+  "ranking_lsa": [
+    {
+      "id": "D5",
+      "tema": "Vivienda",
+      "sim": 0.9998
+    },
+    {
+      "id": "D4",
+      "tema": "Vivienda",
+      "sim": 0.9997
+    },
+    {
+      "id": "D6",
+      "tema": "Vivienda",
+      "sim": 0.9656
+    },
+    {
+      "id": "D7",
+      "tema": "Deporte",
+      "sim": 0.0219
+    },
+    {
+      "id": "D1",
+      "tema": "NLP",
+      "sim": -0.0
+    },
+    {
+      "id": "D3",
+      "tema": "NLP",
+      "sim": -0.0
+    },
+    {
+      "id": "D2",
+      "tema": "NLP",
+      "sim": -0.0
+    },
+    {
+      "id": "D8",
+      "tema": "Deporte",
+      "sim": -0.0553
+    }
+  ],
+  "sim_d4_d5_tfidf": 0.3988,
+  "sim_d4_d7_tfidf": 0.0,
+  "sim_d1_d2_lsa": 1.0,
+  "sim_d1_d7_lsa": 0.0
+}
