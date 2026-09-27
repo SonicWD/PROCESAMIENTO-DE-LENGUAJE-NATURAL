@@ -2,6 +2,11 @@
 
 Especialización en Inteligencia Artificial · Universidad de Cundinamarca · Wilson Alfonso Díaz Capador
 
-En GitHub **solo va la carpeta `entregable/`** (notebook + PDF). El material de trabajo (scripts, figuras intermedias) se queda en el disco local, fuera del remoto.
+## Entregas
 
-**Entrega actual:** [entregable/](./entregable/) — Transforma texto en embeddings.
+| Carpeta | Tarea |
+|---------|--------|
+| [entregable/](./entregable/) | Transforma texto en embeddings (notebook + PDF) |
+| [REA1_Procesamiento_Texto/](./REA1_Procesamiento_Texto/) | Procesamiento de texto: normalización, stemming, stopwords, TF-IDF, POS, lematización, parsing, NER, LLM, QA, resumen, similitud, clasificación, traducción, generación y minería |
+
+En `REA1_Procesamiento_Texto/` están el notebook, el informe PDF, `laboratorio.py` y los requisitos. El modelo de traducción se descarga al ejecutar; no se versiona.
